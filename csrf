@@ -1,0 +1,104 @@
+CSRF works because:
+
+The browser automatically sends session cookies with requests — even if the request was triggered by a malicious site.
+
+The attacker doesn’t steal anything.
+They trick the browser into acting.
+
+Think:
+“use the victim as a proxy”
+
+
+How does CSRF work?
+For a CSRF attack to be possible, three key conditions must be in place:
+
+A relevant action. There is an action within the application that the attacker has a reason to induce. This might be a privileged action (such as modifying permissions for other users) or any action on user-specific data (such as changing the user's own password).
+Cookie-based session handling. Performing the action involves issuing one or more HTTP requests, and the application relies solely on session cookies to identify the user who has made the requests. There is no other mechanism in place for tracking sessions or validating user requests.
+No unpredictable request parameters. The requests that perform the action do not contain any parameters whose values the attacker cannot determine or guess. For example, when causing a user to change their password, the function is not vulnerable if an attacker needs to know the value of the existing password.
+
+Cookie-Based Session Auth
+The app must rely on:
+
+Cookie: session=abc123
+
+
+Browser auto-sends this cookie whenever a request goes to that domain.
+
+That’s the core exploit point.
+
+If the app instead required:
+
+custom auth header
+
+API token not auto-sent
+
+re-enter password
+
+OTP confirmation
+
+CSRF becomes much harder or impossible.
+
+ Condition 3 — No Unpredictable Parameters
+
+Attacker must be able to fully craft the request.
+
+If request is:
+
+POST /change-password
+old_password=???
+new_password=123
+
+
+Attacker doesn’t know old_password → attack fails.
+
+But if request is:
+
+POST /change-email
+email=attacker@mail.com
+so basically csrf is like tricking a logges in browser  to do malcious things this is because browser stores all the cookies and it can make th erequests
+
+so for example there an web application of a bank site that does something for updating the passwoed this is the http request made by the website
+
+POST /email/change HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 30
+Cookie: session=yvthwsztyeQkAPzeQ5gHgTvlyxHfsAfE
+
+email=wiener@normal-user.com
+
+
+Why CSRF Tokens Kill This Attack
+
+Server adds:
+
+csrf_token = random_unpredictable_value
+
+
+Request must include it.
+
+Attacker cannot read victim’s page → cannot get token → attack fails.
+
+Game over.
+
+<html>
+    <body>
+        <form action="https://vulnerable-website.com/email/change" method="POST">
+            <input type="hidden" name="email" value="pwned@evil-user.net" />
+        </form>
+        <script>
+            document.forms[0].submit();
+        </script>
+    </body>
+</html>
+
+Manually creating the HTML needed for a CSRF exploit can be cumbersome, particularly where the desired request contains a large number of parameters, or there are other quirks in the request. The easiest way to construct a CSRF exploit is using the CSRF PoC generator that is built in to Burp Suite Professiona
+
+Select a request anywhere in Burp Suite Professional that you want to test or exploit.
+From the right-click context menu, select Engagement tools / Generate CSRF PoC.
+Burp Suite will generate some HTML that will trigger the selected request (minus cookies, which will be added automatically by the victim's browser).
+You can tweak various options in the CSRF PoC generator to fine-tune aspects of the attack. You might need to do this in some unusual situations to deal with quirky features of requests.
+Copy the generated HTML into a web page, view it in a browser that is logged in to the vulnerable website, and test whether the intended request is issued successfully and the desired action occurs.
+
+
+so i did a lab where i crafted an malcious html code that changes the email address of the user so what i did was first captured how the email request for change looked and took that changed the email address. where i uploaded it to the server where it visits the page so that the victim goes to the site and his mail was changed 
