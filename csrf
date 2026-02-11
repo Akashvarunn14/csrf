@@ -401,4 +401,108 @@ The difference between a site and an origin is their scope; a site encompasses m
 Two URLs are considered to have the same origin if they share the exact same scheme, domain name, and port. Although note that the port is often inferred from the scheme.
 
 (origin) = (scheme, host, port)
+before same site or same orgin policy the browser allowed the website to do cross origin requests to the site 
+
+all major browsers currently support the following SameSite restriction levels:
+. As these requests typically require a cookie associated with the victim's authenticated session, the attack will fail if the browser doesn't include this.
+
+Strict
+Lax
+None
+
+to apply the same site policy the site just has to apply it in the set cookie header with same site policy on like strict lax or none
+
+by default google 
+
+If the website issuing the cookie doesn't explicitly set a SameSite attribute, Chrome automatically applies Lax restrictions by default. This means that the cookie is only sent in cross-site requests that meet specific criteria, even though the developers never configured this behavior. As this is a proposed new standard, we expect other major browsers to adopt this behavior in future.
+
+If a cookie is set with the SameSite=Strict attribute, browsers will not send it in any cross-site requests. In simple terms, this means that if the target site for the request does not match the site currently shown in the browser's address bar, it will not include the cookie.
+
+This is recommended when setting cookies that enable the bearer to modify data or perform other sensitive actions, such as accessing specific pages that are only available to authenticated users.
+
+Although this is the most secure option, it can negatively impact the user experience in cases where cross-site functionality is desirable.
+
+Lax is where the site allows cors under some conditons
+
+1)the site should use the get method
+
+2) User clicks a link → goes to another site
+
+User is redirected → browser loads new page
+
+User types URL → page loads
+
+If a cookie is set with the SameSite=None attribute, this effectively disables SameSite restrictions altogether, regardless of the browser. As a result, browsers will send this cookie in all requests to the site that issued it, even those that were triggered by completely unrelated third-party sites.
+
+With the exception of Chrome, this is the default behavior used by major browsers if no SameSite attribute is provided when setting the cookie.
+
+There are legitimate reasons for disabling SameSite, such as when the cookie is intended to be used from a third-party context and doesn't grant the bearer access to any sensitive data or functionality. Tracking cookies are a typical example.
+
+
+Set-Cookie: trackingId=0F8tgdOhi9ynR1M9wa3ODa; SameSite=None; Secure
+so most of the sites can disable the samesite option and When setting a cookie with SameSite=None, the website must also include the Secure attribute, which ensures that the cookie is only sent in encrypted messages over HTTPS. Otherwise, browsers will reject the cookie and it won't be set.
+We can bypass the restriction of same-site restriction:lax by abusing the use of the get and page avigation
+
+As lax only allows get and resource sharing from its own sites
+we can 
+
+<script>
+    document.location = 'https://vulnerable-website.com/account/transfer-payment?recipient=hacker&amount=1000000';
+</script>
+what it does is that it just sets a location so when the user vistis the evil.com this gets executed as it belives it comes from the same origin
+
+so we assume that the endpont is get /makepayment
+
+so on a whole how does the same site actually does is that whether to set the cookie or not based upon the policy like is the method post then dont send cookie , so now your thing 
+POST /transfer
+Body: _method=GET
+so the request goes to the backend and in backend there is something known as framework to had
+
+_method what it does is that it just does something which is not present in the http header
+
+Request arrives at server.
+
+Framework middleware runs before routing.
+
+Some frameworks (Symfony, Laravel, Rails, etc.) support method override.
+
+Middleware logic:
+
+if POST and body contains _method:
+    effective_method = body["_method"]
+
+
+Now framework routing sees:
+
+GET /makepayment
+so we are just absuing the method override function like to do something vulnerable even though get is send
+
+The browser sends cookies because it sees a GET.
+The backend changes behavior because it sees the override parameter.
+Two different layers. No magic — just misplaced trust.
+
+Let’s walk it tight.
+
+🧭 What the browser sees
+
+Attacker triggers this from another site:
+
+https://vulnerable.com/transfer?_method=POST&amount=1000&to=hacker
+
+
+From the browser’s point of view:
+
+Method = GET
+
+Type = top-level navigation
+
+Cross-site = yes
+
+SameSite=Lax rule says:
+
+Top-level cross-site GET → cookies allowed
+
+So:
+
+Cookie: session=abc123   ✅ sent
 
